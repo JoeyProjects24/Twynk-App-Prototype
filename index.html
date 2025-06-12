@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Twynk</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700&family=Poppins:wght@300&display=swap" rel="stylesheet">
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --text-color: #000000;
+      --nav-hover-color: #000;
+      --primary-color: #4caf50;
+      --error-color: #f44336;
+    }
+
+    body.dark-mode {
+      --bg-color: #121212;
+      --text-color: #ffffff;
+      --nav-hover-color: #ffffff;
+      --primary-color: #66bb6a;
+      --error-color: #ef5350;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 20px;
+      position: relative;
+      flex-wrap: wrap;
+    }
+
+    .logo {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 28px;
+    }
+
+    .nav {
+      display: flex;
+      gap: 20px;
+      font-weight: 300;
+      font-size: 16px;
+    }
+
+    .nav div {
+      position: relative;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+
+    .nav div::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: -4px;
+      width: 100%;
+      height: 2px;
+      background-color: var(--nav-hover-color);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s ease;
+    }
+
+    .nav div:hover::after {
+      transform: scaleX(1);
+    }
+
+    .center-nav {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .content-section {
+      padding: 40px 20px;
+      max-width: 800px;
+      margin: 0 auto;
+      display: none;
+    }
+
+    .active {
+      display: block;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 26px;
+      margin-top: 20px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc;
+      transition: 0.4s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: 0.4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--primary-color);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(24px);
+    }
+
+    @media (max-width: 640px) {
+      header {
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 16px 16px;
+      }
+
+      .logo {
+        font-size: 24px;
+      }
+
+      .center-nav {
+        position: static;
+        transform: none;
+        display: flex;
+        justify-content: center;
+        flex: 1;
+        order: 2;
+        margin-top: 10px;
+      }
+
+      .nav {
+        flex-direction: row;
+        justify-content: center;
+        gap: 16px;
+      }
+    }
+    .create-btn {
+      margin-top: 30px;
+      padding: 14px 32px;
+      font-size: 16px;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 300;
+      background: linear-gradient(135deg, #000000, #222222);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.3s ease-in-out;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    body.dark-mode .create-btn {
+      background: linear-gradient(135deg, #ffffff, #dddddd);
+      color: #000;
+      box-shadow: 0 4px 10px rgba(255, 255, 255, 0.2);
+    }
+
+    .create-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+      background: linear-gradient(135deg, #1a1a1a, #333333);
+    }
+
+    body.dark-mode .create-btn:hover {
+      background: linear-gradient(135deg, #f5f5f5, #cccccc);
+      box-shadow: 0 8px 20px rgba(255, 255, 255, 0.35);
+    }
+    #authSection {
+      text-align: center;
+    }
+    .auth-form-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 450px;
+      margin: 0 auto;
+    }
+    #authSection input {
+      width: 300px;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    .auth-btn {
+      background-color: #000;
+      color: #fff;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+      font-size: 16px;
+      margin-top: 10px;
+      transition: 0.3s;
+      width: 100%;
+    }
+
+    .auth-btn:hover {
+      background-color: #333;
+    }
+
+    body.dark-mode #authSection input {
+      background-color: #222;
+      color: #fff;
+      border-color: #444;
+    }
+
+    body.dark-mode .auth-btn {
+      background-color: #fff;
+      color: #000;
+    }
+
+    body.dark-mode .auth-btn:hover {
+      background-color: #ddd;
+    }
+    
+    .auth-message {
+      margin-top: 15px;
+      color: var(--primary-color);
+      font-size: 14px;
+    }
+    
+    .error-message {
+      color: var(--error-color);
+      font-size: 14px;
+      margin-top: 5px;
+      text-align: left;
+      width: 100%;
+    }
+    
+    .auth-form-group {
+      margin-bottom: 15px;
+      width: 100%;
+    }
+    
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    body.dark-mode .loading {
+      border-top-color: #000;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    body.dark-mode .user-avatar {
+      background-color: #333;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="logo">Twynk.</div>
+    <nav class="nav center-nav">
+      <div id="threadlineBtn">Threadline</div>
+      <div id="tweakBtn">Tweak</div>
+      <div id="unravelBtn">Unravel</div>
+    </nav>
+    <div class="user-avatar" id="userAvatar" style="display: none;"></div>
+  </header>
+
+  <!-- Threadline Home -->
+  <section id="homeSection" class="content-section">
+    <h2>Welcome to Twynk</h2>
+    <p id="welcomeMessage">This is your space to share, connect, and engage globally. Post your thoughts and snapshots with ease.</p>
+    
+    <button class="create-btn" id="createAccountBtn" style="display: none;">Create Account</button>
+    <div id="loggedInContent" style="display: none;">
+      <p>You're logged in and ready to start posting!</p>
+    </div>
+  </section>
+
+  <!-- FAQ / Unravel Section -->
+  <section id="faqSection" class="content-section">
+    <h2>About Twynk (Unravel)</h2>
+    <p><strong>Twynk</strong> is a social communication platform inspired by minimalism and global connection. Users can post short messages, images, and join discussions across the world — all in a clean, focused interface.</p>
+    <ul>
+      <li>Post threaded messages and images</li>
+      <li>React with likes and comments</li>
+      <li>Engage in meaningful discussions</li>
+      <li>Customize experience with dark/light modes</li>
+    </ul>
+  </section>
+
+  <!-- Tweak Settings Section -->
+  <section id="tweakSection" class="content-section">
+    <h2>Tweak Settings</h2>
+    <label class="switch">
+      <input type="checkbox" id="darkModeToggle">
+      <span class="slider"></span>
+    </label>
+    <p style="margin-top: 8px;">Dark Mode</p>
+  </section>
+
+  <!-- Auth Section -->
+  <section id="authSection" class="content-section">
+    <h2 id="authTitle">Sign Up for Twynk</h2>
+    
+    <div id="authMessage" class="auth-message"></div>
+
+    <div class="auth-form-container">
+      <form id="authForm">
+        <div class="auth-form-group">
+          <input type="email" id="email" placeholder="Email" required />
+          <div id="emailError" class="error-message"></div>
+        </div>
+        
+        <div class="auth-form-group" id="usernameGroup">
+          <input type="text" id="username" placeholder="Username" required />
+          <div id="usernameError" class="error-message"></div>
+        </div>
+        
+        <div class="auth-form-group">
+          <input type="password" id="password" placeholder="Password (min 8 characters)" required />
+          <div id="passwordError" class="error-message"></div>
+        </div>
+        
+        <div class="auth-form-group" id="confirmPasswordGroup">
+          <input type="password" id="confirmPassword" placeholder="Confirm Password" required />
+          <div id="confirmPasswordError" class="error-message"></div>
+        </div>
+        
+        <button type="submit" class="auth-btn" id="authSubmitBtn">
+          <span id="authBtnText">Create Account</span>
+          <span id="authBtnLoader" class="loading" style="display: none;"></span>
+        </button>
+      </form>
+
+      <p id="toggleAuth" style="margin-top: 16px; cursor: pointer; text-decoration: underline;">
+        Already have an account? Login
+      </p>
+    </div>
+  </section>
+
+  <script>
+    // Firebase configuration and initialization
+    const firebaseConfig = {
+      apiKey: "AIzaSyCUmDXJYQuRNJSlf4KqrUYA6W2ahBQ-UkA",
+      authDomain: "twynk-social-media-a.firebaseapp.com",
+      projectId: "twynk-social-media-a",
+      storageBucket: "twynk-social-media-a.appspot.com",
+      messagingSenderId: "496653187156",
+      appId: "1:496653187156:web:e96ba85a37ba9d9daa15c1",
+      measurementId: "G-RCDWL1ZE30"
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    // DOM Elements
+    const homeSection = document.getElementById('homeSection');
+    const faqSection = document.getElementById('faqSection');
+    const tweakSection = document.getElementById('tweakSection');
+    const authSection = document.getElementById('authSection');
+    const darkToggle = document.getElementById('darkModeToggle');
+    const createAccountBtn = document.getElementById('createAccountBtn');
+    const toggleAuth = document.getElementById('toggleAuth');
+    const authTitle = document.getElementById('authTitle');
+    const authForm = document.getElementById('authForm');
+    const authSubmitBtn = document.getElementById('authSubmitBtn');
+    const authBtnText = document.getElementById('authBtnText');
+    const authBtnLoader = document.getElementById('authBtnLoader');
+    const authMessage = document.getElementById('authMessage');
+    const welcomeMessage = document.getElementById('welcomeMessage');
+    const loggedInContent = document.getElementById('loggedInContent');
+    const userAvatar = document.getElementById('userAvatar');
+    
+    // Form fields
+    const emailInput = document.getElementById('email');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    
+    // Error messages
+    const emailError = document.getElementById('emailError');
+    const usernameError = document.getElementById('usernameError');
+    const passwordError = document.getElementById('passwordError');
+    const confirmPasswordError = document.getElementById('confirmPasswordError');
+    
+    // Form groups for toggling
+    const usernameGroup = document.getElementById('usernameGroup');
+    const confirmPasswordGroup = document.getElementById('confirmPasswordGroup');
+    
+    let isLogin = false; // Start with signup form
+    let currentSection = 'home'; // Track current section
+
+    // Navigation Buttons
+    document.getElementById('threadlineBtn').addEventListener('click', () => {
+      showSection(homeSection);
+      currentSection = 'home';
+      localStorage.setItem('currentSection', currentSection);
+    });
+
+    document.getElementById('unravelBtn').addEventListener('click', () => {
+      showSection(faqSection);
+      currentSection = 'faq';
+      localStorage.setItem('currentSection', currentSection);
+    });
+
+    document.getElementById('tweakBtn').addEventListener('click', () => {
+      showSection(tweakSection);
+      currentSection = 'tweak';
+      localStorage.setItem('currentSection', currentSection);
+    });
+
+    // Avatar click to show settings
+    userAvatar.addEventListener('click', () => {
+      showSection(tweakSection);
+      currentSection = 'tweak';
+      localStorage.setItem('currentSection', currentSection);
+    });
+
+    function showSection(section) {
+      [homeSection, faqSection, tweakSection, authSection].forEach(sec => sec.classList.remove('active'));
+      section.classList.add('active');
+    }
+
+    // Dark mode toggle logic
+    darkToggle.addEventListener('change', () => {
+      const isDark = darkToggle.checked;
+      document.body.classList.toggle("dark-mode", isDark);
+      localStorage.setItem("darkMode", isDark ? "enabled" : "disabled");
+    });
+
+    // On page load
+    window.addEventListener("DOMContentLoaded", () => {
+      // Set dark mode
+      const saved = localStorage.getItem("darkMode");
+      if (saved === "enabled") {
+        document.body.classList.add("dark-mode");
+        darkToggle.checked = true;
+      }
+      
+      // Set current section from localStorage or default to home
+      currentSection = localStorage.getItem('currentSection') || 'home';
+      showSection(currentSection === 'faq' ? faqSection : 
+                currentSection === 'tweak' ? tweakSection : 
+                homeSection);
+      
+      // Check auth state
+      auth.onAuthStateChanged(user => {
+        if (user) {
+          // User is signed in
+          handleUserSignedIn(user);
+        } else {
+          // No user is signed in
+          handleUserSignedOut();
+        }
+      });
+    });
+
+    // Create Account → Show Auth Section
+    createAccountBtn.addEventListener('click', () => {
+      isLogin = false;
+      updateAuthForm();
+      showSection(authSection);
+    });
+
+    // Toggle between login and signup
+    toggleAuth.addEventListener('click', () => {
+      isLogin = !isLogin;
+      updateAuthForm();
+    });
+
+    function updateAuthForm() {
+      if (isLogin) {
+        authTitle.textContent = 'Login to Twynk';
+        usernameGroup.style.display = 'none';
+        confirmPasswordGroup.style.display = 'none';
+        toggleAuth.textContent = "Don't have an account? Sign up";
+        authBtnText.textContent = "Login";
+      } else {
+        authTitle.textContent = 'Sign Up for Twynk';
+        usernameGroup.style.display = 'block';
+        confirmPasswordGroup.style.display = 'block';
+        toggleAuth.textContent = "Already have an account? Login";
+        authBtnText.textContent = "Create Account";
+      }
+      
+      // Clear all messages and errors
+      clearMessages();
+    }
+
+    function clearMessages() {
+      authMessage.textContent = '';
+      emailError.textContent = '';
+      usernameError.textContent = '';
+      passwordError.textContent = '';
+      confirmPasswordError.textContent = '';
+    }
+
+    // Form validation and submission
+    authForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      clearMessages();
+      
+      let isValid = true;
+      
+      // Validate email
+      if (!emailInput.value) {
+        emailError.textContent = 'Email is required';
+        isValid = false;
+      } else if (!/^\S+@\S+\.\S+$/.test(emailInput.value)) {
+        emailError.textContent = 'Please enter a valid email';
+        isValid = false;
+      }
+      
+      // Validate username (only for signup)
+      if (!isLogin && !usernameInput.value) {
+        usernameError.textContent = 'Username is required';
+        isValid = false;
+      } else if (!isLogin && usernameInput.value.length < 3) {
+        usernameError.textContent = 'Username must be at least 3 characters';
+        isValid = false;
+      }
+      
+      // Validate password
+      if (!passwordInput.value) {
+        passwordError.textContent = 'Password is required';
+        isValid = false;
+      } else if (passwordInput.value.length < 8) {
+        passwordError.textContent = 'Password must be at least 8 characters';
+        isValid = false;
+      }
+      
+      // Validate confirm password (only for signup)
+      if (!isLogin && passwordInput.value !== confirmPasswordInput.value) {
+        confirmPasswordError.textContent = 'Passwords do not match';
+        isValid = false;
+      }
+      
+      if (!isValid) return;
+      
+      // Show loading state
+      authBtnText.style.display = 'none';
+      authBtnLoader.style.display = 'inline-block';
+      authSubmitBtn.disabled = true;
+      
+      try {
+        if (isLogin) {
+          // Login user
+          await auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value);
+          authMessage.textContent = 'Login successful!';
+          showSection(homeSection);
+          currentSection = 'home';
+          localStorage.setItem('currentSection', currentSection);
+        } else {
+          // Create user
+          await auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value);
+          
+          // Store username
+          localStorage.setItem('username', usernameInput.value);
+          
+          // Clear form
+          emailInput.value = '';
+          usernameInput.value = '';
+          passwordInput.value = '';
+          confirmPasswordInput.value = '';
+          
+          // Don't show login screen, go to home
+          showSection(homeSection);
+          currentSection = 'home';
+          localStorage.setItem('currentSection', currentSection);
+        }
+      } catch (error) {
+        handleAuthError(error);
+      } finally {
+        // Hide loading state
+        authBtnText.style.display = 'inline-block';
+        authBtnLoader.style.display = 'none';
+        authSubmitBtn.disabled = false;
+      }
+    });
+    
+    function handleAuthError(error) {
+      let errorMessage = 'An error occurred. Please try again.';
+      
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          errorMessage = 'This email is already in use.';
+          emailError.textContent = errorMessage;
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Please enter a valid email address.';
+          emailError.textContent = errorMessage;
+          break;
+        case 'auth/weak-password':
+          errorMessage = 'Password should be at least 8 characters.';
+          passwordError.textContent = errorMessage;
+          break;
+        case 'auth/user-not-found':
+          errorMessage = 'No user found with this email.';
+          emailError.textContent = errorMessage;
+          break;
+        case 'auth/wrong-password':
+          errorMessage = 'Incorrect password.';
+          passwordError.textContent = errorMessage;
+          break;
+        default:
+          authMessage.textContent = errorMessage;
+          console.error('Authentication error:', error);
+      }
+    }
+    
+    function handleUserSignedIn(user) {
+      // Hide create account button
+      createAccountBtn.style.display = 'none';
+      loggedInContent.style.display = 'block';
+      
+      // Show user avatar
+      userAvatar.style.display = 'flex';
+      
+      // Update welcome message and avatar
+      const username = localStorage.getItem('username') || user.email.split('@')[0];
+      welcomeMessage.textContent = `Welcome back, ${username}! Ready to share your thoughts?`;
+      userAvatar.textContent = username.charAt(0).toUpperCase();
+    }
+    
+    function handleUserSignedOut() {
+      // Show create account button
+      createAccountBtn.style.display = 'block';
+      loggedInContent.style.display = 'none';
+      
+      // Hide user avatar
+      userAvatar.style.display = 'none';
+      
+      // Reset welcome message
+      welcomeMessage.textContent = 'This is your space to share, connect, and engage globally. Post your thoughts and snapshots with ease.';
+    }
+  </script>
+</body>
+</html>
