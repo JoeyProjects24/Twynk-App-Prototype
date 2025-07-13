@@ -1,222 +1,702 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Twynk Access Card - Horizontal Flip</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Chat</title>
+    <style>
+        /* Modern Social Media Styles */
+        :root {
+            --primary: #0095F6; /* Instagram blue */
+            --primary-dark: #0074CC;
+            --text-primary: #262626;
+            --text-secondary: #8E8E8E;
+            --background: #FAFAFA;
+            --card-bg: #FFFFFF;
+            --border: #DBDBDB;
+            --success: #4CB944;
+            --error: #ED4956;
+            --bubble-sent: #0095F6;
+            --bubble-received: #EFEFEF;
+            --input-bg: #F0F2F5;
+        }
 
-    body {
-      height: 100vh;
-      background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
-      font-family: 'Outfit', sans-serif;
-      overflow: hidden;
-      position: relative;
-    }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #0095F6;
+                --primary-dark: #0074CC;
+                --text-primary: #F5F5F5;
+                --text-secondary: #A8A8A8;
+                --background: #121212;
+                --card-bg: #1E1E1E;
+                --border: #363636;
+                --bubble-sent: #0095F6;
+                --bubble-received: #262626;
+                --input-bg: #242424;
+            }
+        }
 
-    .title {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: white;
-      font-size: 32px;
-      font-weight: 700;
-      opacity: 1;
-      z-index: 1;
-      transition: opacity 0.4s ease;
-    }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
 
-    .overlay {
-      position: absolute;
-      inset: 0;
-      backdrop-filter: blur(0px);
-      transition: backdrop-filter 0.6s ease;
-      z-index: 0;
-      pointer-events: none;
-    }
+        body {
+            background-color: var(--background);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
 
-    .overlay.active {
-      backdrop-filter: blur(10px);
-    }
+        /* Auth Container */
+        .auth-container {
+            width: 100%;
+            max-width: 400px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+            animation: fadeIn 0.4s ease-out;
+        }
 
-    .card {
-      position: absolute;
-      bottom: -120px;
-      left: 50%;
-      transform: translate(-50%, 0%) rotate(90deg);
-      transform-origin: center center;
-      width: 400px;
-      height: 230px;
-      background: rgba(255, 255, 255, 0.07);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 20px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
-      padding: 25px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      transition: transform 0.8s cubic-bezier(0.18, 1.1, 0.4, 1), bottom 0.8s ease;
-      z-index: 2;
-      cursor: grab;
-    }
+        .app-logo {
+            font-size: 32px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 24px;
+            color: var(--primary);
+        }
 
-    .card-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-    }
+        .auth-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            text-align: center;
+        }
 
-    .left {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding-right: 20px;
-    }
+        .form-group {
+            margin-bottom: 16px;
+        }
 
-    .brand {
-      font-size: 16px;
-      font-weight: 600;
-      color: #ffffff;
-      margin-bottom: 6px;
-    }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
 
-    .name {
-      font-size: 20px;
-      font-weight: 700;
-      color: #ffffff;
-    }
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 15px;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
 
-    .handle {
-      font-size: 14px;
-      font-weight: 400;
-      color: #cccccc;
-    }
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(0, 149, 246, 0.2);
+        }
 
-    .qr {
-      width: 100px;
-      height: 100px;
-      overflow: hidden;
-      border-radius: 10px;
-      flex-shrink: 0;
-    }
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
 
-    .qr img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
+        button:hover {
+            background-color: var(--primary-dark);
+        }
 
-    .swiped-up {
-      bottom: 50%;
-      transform: translate(-50%, 50%) rotate(90deg) scale(1.05);
-      box-shadow: 0 40px 80px rgba(0, 0, 0, 0.8);
-    }
+        button:active {
+            transform: scale(0.98);
+        }
 
-    .hide-title {
-      opacity: 0;
-    }
+        .auth-toggle {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
 
-    @media (max-width: 280px) {
-      .card {
-        width: 320px;
-        height: 200px;
-        padding: 18px;
-      }
+        .auth-toggle button {
+            background: none;
+            color: var(--primary);
+            text-decoration: none;
+            padding: 0;
+            font-size: 14px;
+            font-weight: 600;
+            width: auto;
+        }
 
-      .name {
-        font-size: 18px;
-      }
+        .error-message {
+            color: var(--error);
+            font-size: 13px;
+            margin-top: 8px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
 
-      .qr {
-        width: 80px;
-        height: 80px;
-      }
+        .error-message.show {
+            opacity: 1;
+        }
 
-      .title {
-        font-size: 26px;
-      }
-    }
-  </style>
+        /* Chat Container */
+        .chat-container {
+            width: 100%;
+            max-width: 500px;
+            height: 90vh;
+            max-height: 800px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            display: none;
+        }
+
+        .chat-header {
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .chat-title {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chat-title svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .user-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            background: none;
+            color: var(--primary);
+            font-size: 14px;
+            font-weight: 600;
+            width: auto;
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+        }
+
+        .logout-btn:hover {
+            background: var(--input-bg);
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+
+        .messages-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .messages-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background-color: var(--border);
+            border-radius: 3px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 15px;
+            line-height: 1.4;
+            word-wrap: break-word;
+            animation: messageIn 0.3s ease-out forwards;
+            opacity: 0;
+            transform: translateY(10px);
+            position: relative;
+        }
+
+        .sent {
+            align-self: flex-end;
+            background: var(--bubble-sent);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .received {
+            align-self: flex-start;
+            background: var(--bubble-received);
+            color: var(--text-primary);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-info {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-top: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .message-status {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .input-container {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .message-input {
+            flex: 1;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 12px 16px;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .send-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .send-btn:disabled {
+            background: var(--border);
+            cursor: not-allowed;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes messageIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 500px) {
+            .auth-container {
+                padding: 24px;
+                max-width: 100%;
+                border-radius: 0;
+                height: 100vh;
+                justify-content: center;
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .chat-container {
+                height: 100vh;
+                max-height: none;
+                border-radius: 0;
+            }
+        }
+    </style>
 </head>
 <body>
-
-  <div class="overlay" id="overlay"></div>
-
-  <div class="title" id="mainTitle">#Twynk.</div>
-
-  <div class="card" id="twynkCard">
-    <div class="card-content">
-      <div class="left">
-        <div class="brand">#Twynk.</div>
-        <div class="name">Joseph Kothapalli</div>
-        <div class="handle">@seph23</div>
-      </div>
-      <div class="qr">
-        <img src="Access Card.png" alt="QR Code">
-      </div>
+    <!-- Auth Container -->
+    <div class="auth-container" id="authContainer">
+        <div class="app-logo">Social Chat</div>
+        <h1 class="auth-title" id="authTitle">Login</h1>
+        
+        <div id="loginForm">
+            <div class="form-group">
+                <label for="loginEmail">Email</label>
+                <input type="email" id="loginEmail" placeholder="Enter your email">
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter your password">
+            </div>
+            <button id="loginBtn">Log In</button>
+            <div class="auth-toggle">
+                <p>Don't have an account? <button id="showSignup">Sign up</button></p>
+            </div>
+            <div class="error-message" id="loginError"></div>
+        </div>
+        
+        <div id="signupForm" style="display: none;">
+            <div class="form-group">
+                <label for="signupEmail">Email</label>
+                <input type="email" id="signupEmail" placeholder="Enter your email">
+            </div>
+            <div class="form-group">
+                <label for="signupPassword">Password</label>
+                <input type="password" id="signupPassword" placeholder="Create a password">
+            </div>
+            <div class="form-group">
+                <label for="signupConfirmPassword">Confirm Password</label>
+                <input type="password" id="signupConfirmPassword" placeholder="Confirm your password">
+            </div>
+            <button id="signupBtn">Sign Up</button>
+            <div class="auth-toggle">
+                <p>Already have an account? <button id="showLogin">Log in</button></p>
+            </div>
+            <div class="error-message" id="signupError"></div>
+        </div>
     </div>
-  </div>
+    
+    <!-- Chat Container -->
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-header">
+            <h1 class="chat-title">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 10H8.01M12 10H12.01M16 10H16.01M9 16H5C3.89543 16 3 15.1046 3 14V6C3 4.89543 3.89543 4 5 4H19C20.1046 4 21 4.89543 21 6V14C21 15.1046 20.1046 16 19 16H14L9 21V16Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Messages
+            </h1>
+            <div class="user-controls">
+                <div class="user-avatar" id="userAvatar">U</div>
+                <button class="logout-btn" id="logoutBtn">Log out</button>
+            </div>
+        </div>
+        
+        <div class="messages-container" id="messagesContainer">
+            <!-- Messages will appear here -->
+        </div>
+        
+        <div class="input-container">
+            <input type="text" class="message-input" id="messageInput" placeholder="Message...">
+            <button class="send-btn" id="sendBtn" disabled>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22 2L11 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+    </div>
 
-  <script>
-    const card = document.getElementById('twynkCard');
-    const title = document.getElementById('mainTitle');
-    const overlay = document.getElementById('overlay');
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+        import { 
+            getAuth, 
+            createUserWithEmailAndPassword, 
+            signInWithEmailAndPassword, 
+            signOut,
+            onAuthStateChanged
+        } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+        import { 
+            getFirestore, 
+            collection, 
+            addDoc, 
+            serverTimestamp, 
+            query, 
+            orderBy, 
+            onSnapshot 
+        } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-    let startY = 0;
-    let isDragging = false;
-    let isSwiped = false;
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCUmDXJYQuRNJSlf4KqrUYA6W2ahBQ-UkA",
+            authDomain: "twynk-social-media-a.firebaseapp.com",
+            projectId: "twynk-social-media-a",
+            storageBucket: "twynk-social-media-a.firebasestorage.app",
+            messagingSenderId: "496653187156",
+            appId: "1:496653187156:web:e96ba85a37ba9d9daa15c1",
+            measurementId: "G-RCDWL1ZE30"
+        };
 
-    function handleSwipe(endY) {
-      const delta = startY - endY;
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-      // Swipe up
-      if (delta > 60 && !isSwiped) {
-        card.classList.add('swiped-up');
-        title.classList.add('hide-title');
-        overlay.classList.add('active');
-        isSwiped = true;
-      }
+        // DOM Elements
+        const authContainer = document.getElementById('authContainer');
+        const chatContainer = document.getElementById('chatContainer');
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const authTitle = document.getElementById('authTitle');
+        const showSignupBtn = document.getElementById('showSignup');
+        const showLoginBtn = document.getElementById('showLogin');
+        const loginBtn = document.getElementById('loginBtn');
+        const signupBtn = document.getElementById('signupBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const loginEmail = document.getElementById('loginEmail');
+        const loginPassword = document.getElementById('loginPassword');
+        const signupEmail = document.getElementById('signupEmail');
+        const signupPassword = document.getElementById('signupPassword');
+        const signupConfirmPassword = document.getElementById('signupConfirmPassword');
+        const loginError = document.getElementById('loginError');
+        const signupError = document.getElementById('signupError');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const userAvatar = document.getElementById('userAvatar');
 
-      // Swipe down
-      if (delta < -60 && isSwiped) {
-        card.classList.remove('swiped-up');
-        title.classList.remove('hide-title');
-        overlay.classList.remove('active');
-        isSwiped = false;
-      }
-    }
+        // Toggle between login and signup forms
+        showSignupBtn.addEventListener('click', () => {
+            loginForm.style.display = 'none';
+            signupForm.style.display = 'block';
+            authTitle.textContent = 'Sign Up';
+            loginError.classList.remove('show');
+        });
 
-    // Mouse support
-    card.addEventListener('mousedown', (e) => {
-      startY = e.clientY;
-      isDragging = true;
-    });
+        showLoginBtn.addEventListener('click', () => {
+            signupForm.style.display = 'none';
+            loginForm.style.display = 'block';
+            authTitle.textContent = 'Log In';
+            signupError.classList.remove('show');
+        });
 
-    card.addEventListener('mouseup', (e) => {
-      if (!isDragging) return;
-      handleSwipe(e.clientY);
-      isDragging = false;
-    });
+        // Enable/disable send button based on input
+        messageInput.addEventListener('input', () => {
+            sendBtn.disabled = messageInput.value.trim() === '';
+        });
 
-    // Touch support
-    card.addEventListener('touchstart', (e) => {
-      startY = e.touches[0].clientY;
-    });
+        // Login function
+        loginBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const email = loginEmail.value;
+            const password = loginPassword.value;
+            
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                // Success handled by auth state listener
+            } catch (error) {
+                loginError.textContent = error.message;
+                loginError.classList.add('show');
+            }
+        });
 
-    card.addEventListener('touchend', (e) => {
-      handleSwipe(e.changedTouches[0].clientY);
-    });
-  </script>
+        // Signup function
+        signupBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const email = signupEmail.value;
+            const password = signupPassword.value;
+            const confirmPassword = signupConfirmPassword.value;
+            
+            // Basic validation
+            if (password !== confirmPassword) {
+                signupError.textContent = "Passwords don't match";
+                signupError.classList.add('show');
+                return;
+            }
+            
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                signupError.classList.remove('show');
+                
+                // Clear form and switch to login
+                signupEmail.value = '';
+                signupPassword.value = '';
+                signupConfirmPassword.value = '';
+                signupForm.style.display = 'none';
+                loginForm.style.display = 'block';
+                authTitle.textContent = 'Log In';
+            } catch (error) {
+                signupError.textContent = error.message;
+                signupError.classList.add('show');
+            }
+        });
 
+        // Logout function
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+            } catch (error) {
+                console.error("Logout error:", error);
+            }
+        });
+
+        // Send message function
+        sendBtn.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !sendBtn.disabled) {
+                sendMessage();
+            }
+        });
+
+        async function sendMessage() {
+            const messageText = messageInput.value.trim();
+            const user = auth.currentUser;
+            
+            if (messageText && user) {
+                try {
+                    await addDoc(collection(db, "messages"), {
+                        text: messageText,
+                        sender: user.email,
+                        timestamp: serverTimestamp()
+                    });
+                    messageInput.value = '';
+                    sendBtn.disabled = true;
+                } catch (error) {
+                    console.error("Error sending message:", error);
+                }
+            }
+        }
+
+        // Display a message in the chat
+        function displayMessage(message, isCurrentUser) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isCurrentUser ? 'sent' : 'received'}`;
+            
+            // Reset animation properties
+            messageDiv.style.animation = 'none';
+            messageDiv.style.opacity = '0';
+            messageDiv.style.transform = 'translateY(10px)';
+            
+            const messageContent = document.createElement('div');
+            messageContent.textContent = message.text;
+            
+            const messageInfo = document.createElement('div');
+            messageInfo.className = 'message-info';
+            
+            const timeSpan = document.createElement('span');
+            if (message.timestamp) {
+                const date = message.timestamp.toDate();
+                timeSpan.textContent = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            } else {
+                timeSpan.textContent = 'Just now';
+            }
+            
+            const messageStatus = document.createElement('div');
+            messageStatus.className = 'message-status';
+            
+            if (isCurrentUser) {
+                const checkIcon = document.createElement('span');
+                checkIcon.innerHTML = '✓';
+                messageStatus.appendChild(checkIcon);
+            }
+            
+            messageInfo.appendChild(timeSpan);
+            messageInfo.appendChild(messageStatus);
+            
+            messageDiv.appendChild(messageContent);
+            messageDiv.appendChild(messageInfo);
+            
+            messagesContainer.appendChild(messageDiv);
+            
+            // Trigger reflow to restart animation
+            setTimeout(() => {
+                messageDiv.style.animation = 'messageIn 0.3s ease-out forwards';
+            }, 10);
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Auth state listener
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in
+                authContainer.style.display = 'none';
+                chatContainer.style.display = 'flex';
+                
+                // Set user avatar initial
+                const emailInitial = user.email ? user.email.charAt(0).toUpperCase() : 'U';
+                userAvatar.textContent = emailInitial;
+                
+                loadMessages();
+            } else {
+                // User is signed out
+                authContainer.style.display = 'flex';
+                chatContainer.style.display = 'none';
+                messagesContainer.innerHTML = '';
+            }
+        });
+
+        // Load and display messages
+        function loadMessages() {
+            const messagesQuery = query(
+                collection(db, "messages"), 
+                orderBy("timestamp")
+            );
+            
+            onSnapshot(messagesQuery, (snapshot) => {
+                messagesContainer.innerHTML = '';
+                const currentUserEmail = auth.currentUser?.email;
+                
+                snapshot.forEach((doc) => {
+                    const message = doc.data();
+                    const isCurrentUser = message.sender === currentUserEmail;
+                    displayMessage(message, isCurrentUser);
+                });
+                
+                // Scroll to bottom
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            });
+        }
+    </script>
 </body>
 </html>
